@@ -3,360 +3,304 @@
 <html lang="pt">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MX Motocross Racing</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MX Pro Racing</title>
 <style>
 *{box-sizing:border-box}
-body{margin:0;background:#10151c;color:white;font-family:Arial,sans-serif;text-align:center}
-header{padding:18px;background:#080b10;border-bottom:3px solid #f97316}
-h1{margin:0;color:#ff7b22;font-size:32px}
-h2{color:#ff9a43}
-.panel{max-width:1000px;margin:20px auto;padding:20px;background:#1b2531;border-radius:14px}
-.choices{display:flex;justify-content:center;gap:12px;flex-wrap:wrap}
-.choice{background:#283747;border:2px solid #536578;border-radius:10px;padding:12px;cursor:pointer;min-width:130px}
-.choice.selected{border-color:#ff7b22;background:#48301f}
-.choice b{display:block;margin-bottom:7px}
-button{border:0;border-radius:9px;padding:13px 20px;background:#ff7b22;color:#111;font-size:16px;font-weight:bold;cursor:pointer;margin:5px}
-button:hover{background:#ffa45f}
-select{padding:12px;border-radius:8px;margin:5px}
-#game{display:none;max-width:1000px;margin:20px auto;padding:10px;background:#1b2531;border-radius:12px}
-canvas{width:100%;background:#9bd7f5;border-radius:8px;display:block}
+body{margin:0;background:#10151c;color:white;font-family:Arial;text-align:center}
+header{padding:15px;background:#080b10;border-bottom:3px solid #ff7020}
+h1{color:#ff7020;margin:5px}
+.panel{max-width:1000px;margin:15px auto;padding:15px;background:#1b2531;border-radius:12px}
+.choices{display:flex;justify-content:center;flex-wrap:wrap;gap:10px}
+.choice{padding:12px;background:#293746;border:2px solid #586879;border-radius:9px;cursor:pointer}
+.choice.selected{border-color:#ff7020;background:#48301f}
+button,select{padding:12px;margin:5px;border:0;border-radius:8px;font-weight:bold;cursor:pointer}
+button{background:#ff7020;color:#111}
+canvas{display:block;width:100%;border-radius:8px;background:#91d5ff}
+#game{display:none;max-width:1000px;margin:15px auto;padding:10px;background:#1b2531;border-radius:12px}
 .hud{display:flex;justify-content:space-around;flex-wrap:wrap;gap:10px;padding:12px;font-weight:bold}
-#message{color:#ffb36b;min-height:22px}
-.controls{color:#d5e1ee;font-size:14px;line-height:1.8}
+.controls{font-size:13px;color:#dbe5ee;line-height:1.8}
 </style>
 </head>
 <body>
-<header>
-<h1>🏁 MX MOTOCROSS RACING</h1>
-<p>Escolhe a tua mota. Escolhe a pista. Corre!</p>
-</header>
+<header><h1>🏁 MX PRO RACING</h1><p>Escolhe a tua máquina e acelera!</p></header>
 
-<section class="panel" id="menu">
-<h2>1. Escolhe a tua mota</h2>
+<div class="panel" id="menu">
+<h2>Escolhe a mota</h2>
 <div class="choices" id="bikes">
-<div class="choice selected" data-bike="Honda" data-color="#e62929"><b>🔴 HONDA</b>CRF 250</div>
-<div class="choice" data-bike="Yamaha" data-color="#247bff"><b>🔵 YAMAHA</b>YZ 250</div>
-<div class="choice" data-bike="KTM" data-color="#ff7b19"><b>🟠 KTM</b>250 SX</div>
-<div class="choice" data-bike="Kawasaki" data-color="#35ce58"><b>🟢 KAWASAKI</b>KX 250</div>
+<div class="choice selected" data-name="Honda CRF" data-color="#e52828" data-power="210">🔴 Honda CRF</div>
+<div class="choice" data-name="Yamaha YZ" data-color="#1976ff" data-power="220">🔵 Yamaha YZ</div>
+<div class="choice" data-name="KTM SX" data-color="#ff781d" data-power="235">🟠 KTM SX</div>
+<div class="choice" data-name="Kawasaki KX" data-color="#38d65b" data-power="215">🟢 Kawasaki KX</div>
 </div>
-
-<h2>2. Escolhe a pista</h2>
+<h2>Escolhe a pista</h2>
 <div class="choices" id="tracks">
-<div class="choice selected" data-track="Floresta"><b>🌲 Floresta</b>Terra e lombas</div>
-<div class="choice" data-track="Deserto"><b>🏜️ Deserto</b>Pista rápida</div>
-<div class="choice" data-track="Montanha"><b>⛰️ Montanha</b>Subidas e descidas</div>
-<div class="choice" data-track="Estádio"><b>🏟️ Estádio</b>Pista de competição</div>
+<div class="choice selected" data-track="Floresta">🌲 Floresta</div>
+<div class="choice" data-track="Deserto">🏜️ Deserto</div>
+<div class="choice" data-track="Montanha">⛰️ Montanha</div>
+<div class="choice" data-track="Estádio">🏟️ Estádio</div>
 </div>
-
-<h2>3. Modo de jogo</h2>
+<p>
 <select id="mode">
 <option value="race">Corrida — 3 voltas</option>
 <option value="time">Contra o tempo — 60 segundos</option>
 <option value="free">Treino livre</option>
 </select>
-<br><br>
-<button id="start">🏁 START — INICIAR JOGO</button>
-<p id="message">Escolhe as opções e começa a corrida!</p>
-</section>
+</p>
+<button id="start">🏁 INICIAR CORRIDA</button>
+<p id="message">Prepara-te para correr!</p>
+</div>
 
-<section id="game">
+<div id="game">
 <div class="hud">
-<span>🏍️ Mota: <span id="hudBike">Honda</span></span>
-<span>📍 Pista: <span id="hudTrack">Floresta</span></span>
-<span>⚡ Velocidade: <span id="speed">0</span> km/h</span>
-<span>🏆 Volta: <span id="lap">1</span>/3</span>
-<span>⏱️ Tempo: <span id="timer">0.0</span>s</span>
+<span>🏍️ <span id="bikeName">Honda CRF</span></span>
+<span>⚡ <span id="speed">0</span> km/h</span>
+<span>🏆 Volta <span id="lap">1</span>/3</span>
+<span>⏱️ <span id="timer">0.0</span>s</span>
 </div>
-<canvas id="canvas" width="960" height="440"></canvas>
+<canvas id="canvas" width="960" height="480"></canvas>
 <div class="controls">
-<b>Controlos:</b> → Acelerar | ← Travar | ↑ Inclinar para trás | ↓ Inclinar para a frente | ESPAÇO Saltar<br>
-No telemóvel, também podes usar os botões abaixo.
+<b>→</b> Acelerar · <b>←</b> Travar · <b>↑</b> Inclinar para trás · <b>↓</b> Inclinar para a frente · <b>ESPAÇO</b> Saltar
 </div>
-<div>
-<button id="accelerate">➡️ ACELERAR</button>
-<button id="brake">⬅️ TRAVAR</button>
+<button id="gas">➡️ ACELERAR</button>
+<button id="brakes">⬅️ TRAVAR</button>
 <button id="jump">⬆️ SALTAR</button>
-<button id="backMenu">🏠 MENU</button>
-</div>
+<button id="menuBtn">🏠 MENU</button>
 <p id="status">Boa corrida!</p>
-</section>
+</div>
 
 <script>
-(function(){
-"use strict";
+(()=>{
+const $=id=>document.getElementById(id);
+const canvas=$("canvas"),ctx=canvas.getContext("2d");
+let bikeName="Honda CRF",bikeColor="#e52828",power=210,track="Floresta",mode="race";
+let running=false,dist=0,speed=0,time=0,lap=1;
+let height=0,vy=0,angle=0,suspension=0,crash=0,last=0,raf=0;
+let keys={},gas=false,brake=false,jumpButton=false,bumps=[];
+const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
 
-const $ = id => document.getElementById(id);
-const canvas = $("canvas");
-const ctx = canvas.getContext("2d");
-
-let bike = "Honda", bikeColor = "#e62929";
-let track = "Floresta", mode = "race";
-let running = false, ended = false;
-let speed = 0, distance = 0, elapsed = 0, lap = 1;
-let jumpHeight = 0, jumpVelocity = 0, tilt = 0;
-let lastTime = 0, animation = 0, obstacles = [];
-let keys = {};
-let holdAccel = false, holdBrake = false, holdJump = false;
-let crashTime = 0;
-
-function choose(container, callback) {
-  $(container).querySelectorAll(".choice").forEach(el => {
-    el.addEventListener("click", () => {
-      $(container).querySelectorAll(".choice").forEach(c => c.classList.remove("selected"));
-      el.classList.add("selected");
-      callback(el);
-    });
-  });
-}
-
-choose("bikes", el => {
-  bike = el.dataset.bike;
-  bikeColor = el.dataset.color;
+function selectGroup(id,fn){
+$(id).querySelectorAll(".choice").forEach(el=>el.onclick=()=>{
+$(id).querySelectorAll(".choice").forEach(c=>c.classList.remove("selected"));
+el.classList.add("selected");fn(el);
 });
-choose("tracks", el => track = el.dataset.track);
+}
+selectGroup("bikes",el=>{bikeName=el.dataset.name;bikeColor=el.dataset.color;power=+el.dataset.power;});
+selectGroup("tracks",el=>track=el.dataset.track);
 
-function ground(x) {
-  const base = 340;
-  if (track === "Estádio") return base + Math.sin(x/150)*10 + Math.sin(x/65)*4;
-  if (track === "Montanha") return base + Math.sin(x/95)*28 + Math.sin(x/43)*9;
-  if (track === "Deserto") return base + Math.sin(x/120)*14 + Math.sin(x/49)*5;
-  return base + Math.sin(x/105)*21 + Math.sin(x/39)*7;
+function terrain(x){
+let y=350;
+if(track==="Montanha")y+=Math.sin(x/90)*36+Math.sin(x/33)*9;
+else if(track==="Deserto")y+=Math.sin(x/140)*13+Math.sin(x/45)*5;
+else if(track==="Estádio")y+=Math.sin(x/115)*10+Math.sin(x/47)*5;
+else y+=Math.sin(x/80)*22+Math.sin(x/31)*8;
+return y;
 }
 
-function resetGame() {
-  speed = 0;
-  distance = 0;
-  elapsed = 0;
-  lap = 1;
-  jumpHeight = 0;
-  jumpVelocity = 0;
-  tilt = 0;
-  crashTime = 0;
-  ended = false;
-  obstacles = [];
-  for (let i=0;i<16;i++) obstacles.push({
-    x: 450+i*330+Math.random()*120,
-    type: Math.random()<0.7 ? "bump" : "rock",
-    passed:false
-  });
-  $("hudBike").textContent = bike;
-  $("hudTrack").textContent = track;
-  $("status").textContent = "Boa corrida!";
-  $("lap").textContent = lap;
-  $("timer").textContent = "0.0";
-  $("speed").textContent = "0";
+function start(){
+bikeName=$("bikes").querySelector(".selected").dataset.name;
+bikeColor=$("bikes").querySelector(".selected").dataset.color;
+power=+$("bikes").querySelector(".selected").dataset.power;
+track=$("tracks").querySelector(".selected").dataset.track;
+mode=$("mode").value;
+dist=0;speed=0;time=0;lap=1;height=0;vy=0;angle=0;suspension=0;crash=0;
+bumps=[];
+for(let i=0;i<35;i++)bumps.push({x:550+i*280+Math.random()*150,type:Math.random()<.8?"bump":"rock",hit:false});
+$("bikeName").textContent=bikeName;
+$("lap").textContent="1";
+$("menu").style.display="none";$("game").style.display="block";
+running=true;last=performance.now();cancelAnimationFrame(raf);raf=requestAnimationFrame(loop);
 }
 
-function startGame() {
-  try {
-    bike = $("bikes").querySelector(".selected").dataset.bike;
-    bikeColor = $("bikes").querySelector(".selected").dataset.color;
-    track = $("tracks").querySelector(".selected").dataset.track;
-    mode = $("mode").value;
-    resetGame();
-    $("menu").style.display = "none";
-    $("game").style.display = "block";
-    running = true;
-    lastTime = performance.now();
-    cancelAnimationFrame(animation);
-    animation = requestAnimationFrame(loop);
-  } catch (error) {
-    $("message").textContent = "Erro ao iniciar: " + error.message;
-    console.error(error);
-  }
+function wheel(x,y,r){
+ctx.fillStyle="#151719";ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();
+ctx.strokeStyle="#aab5bf";ctx.lineWidth=3;ctx.stroke();
+ctx.strokeStyle="#66717c";ctx.lineWidth=2;
+for(let i=0;i<8;i++){
+let a=i*Math.PI/4;
+ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+Math.cos(a)*(r-4),y+Math.sin(a)*(r-4));ctx.stroke();
+}
+ctx.fillStyle="#dce3e8";ctx.beginPath();ctx.arc(x,y,4,0,Math.PI*2);ctx.fill();
 }
 
-function drawBike(x,y) {
-  ctx.save();
-  ctx.translate(x,y-jumpHeight);
-  ctx.rotate(tilt*0.22);
-  // Wheels
-  ctx.fillStyle="#171717";
-  ctx.beginPath();ctx.arc(-29,7,18,0,Math.PI*2);ctx.fill();
-  ctx.beginPath();ctx.arc(31,7,18,0,Math.PI*2);ctx.fill();
-  ctx.strokeStyle="#b8c1ca";ctx.lineWidth=4;
-  ctx.beginPath();ctx.arc(-29,7,10,0,Math.PI*2);ctx.stroke();
-  ctx.beginPath();ctx.arc(31,7,10,0,Math.PI*2);ctx.stroke();
-  // Frame and body
-  ctx.strokeStyle="#c5ced7";ctx.lineWidth=5;
-  ctx.beginPath();ctx.moveTo(-29,7);ctx.lineTo(-8,-18);ctx.lineTo(31,7);ctx.stroke();
-  ctx.fillStyle=bikeColor;
-  ctx.beginPath();ctx.moveTo(-15,-24);ctx.lineTo(12,-29);ctx.lineTo(28,-12);ctx.lineTo(2,-7);ctx.closePath();ctx.fill();
-  ctx.fillStyle="#222";
-  ctx.fillRect(-17,-34,26,6);
-  // Rider
-  ctx.strokeStyle="#20232a";ctx.lineWidth=9;
-  ctx.beginPath();ctx.moveTo(-4,-29);ctx.lineTo(2,-49);ctx.lineTo(20,-34);ctx.stroke();
-  ctx.strokeStyle="#e6c29c";ctx.lineWidth=6;
-  ctx.beginPath();ctx.moveTo(2,-47);ctx.lineTo(20,-34);ctx.lineTo(30,-28);ctx.stroke();
-  ctx.fillStyle="#202b3c";
-  ctx.beginPath();ctx.arc(-3,-54,12,0,Math.PI*2);ctx.fill();
-  ctx.fillStyle=bikeColor;
-  ctx.beginPath();ctx.moveTo(-14,-59);ctx.lineTo(7,-65);ctx.lineTo(13,-58);ctx.lineTo(-7,-54);ctx.fill();
-  ctx.restore();
+function drawBike(x,y){
+ctx.save();ctx.translate(x,y-height);ctx.rotate(angle);
+let bounce=Math.sin(time*25)*Math.min(speed/100,1)*1.5;
+ctx.translate(0,bounce+suspension);
+const spin=dist*.08;
+// shadow
+ctx.fillStyle="rgba(0,0,0,.17)";
+ctx.beginPath();ctx.ellipse(0,27+height,51,5,0,0,Math.PI*2);ctx.fill();
+// wheels
+wheel(-31,5,17);wheel(32,5,17);
+// frame
+ctx.strokeStyle="#b7c2cc";ctx.lineWidth=5;ctx.lineCap="round";
+ctx.beginPath();ctx.moveTo(-31,5);ctx.lineTo(-8,-17);ctx.lineTo(32,5);ctx.lineTo(4,5);ctx.closePath();ctx.stroke();
+// fork and rear suspension
+ctx.strokeStyle="#d9e1e8";ctx.lineWidth=4;
+ctx.beginPath();ctx.moveTo(14,-21);ctx.lineTo(32,5);ctx.moveTo(-14,-17);ctx.lineTo(-31,5);ctx.stroke();
+ctx.strokeStyle="#303943";ctx.lineWidth=6;
+ctx.beginPath();ctx.moveTo(-24,-15);ctx.lineTo(-5,-27);ctx.lineTo(12,-19);ctx.stroke();
+// seat
+ctx.fillStyle="#20242a";ctx.beginPath();ctx.moveTo(-23,-30);ctx.lineTo(2,-32);ctx.lineTo(12,-26);ctx.lineTo(-18,-24);ctx.fill();
+// body panels
+ctx.fillStyle=bikeColor;
+ctx.beginPath();ctx.moveTo(-12,-30);ctx.lineTo(10,-38);ctx.lineTo(27,-24);ctx.lineTo(6,-15);ctx.lineTo(-10,-20);ctx.fill();
+ctx.beginPath();ctx.moveTo(-20,-27);ctx.lineTo(-10,-39);ctx.lineTo(-1,-32);ctx.lineTo(-8,-20);ctx.fill();
+// exhaust
+ctx.fillStyle="#bfc6cc";ctx.fillRect(-28,-22,14,5);
+// rider torso
+ctx.strokeStyle="#1d2838";ctx.lineWidth=12;
+ctx.beginPath();ctx.moveTo(-3,-34);ctx.lineTo(7,-51);ctx.lineTo(21,-37);ctx.stroke();
+// arms
+ctx.strokeStyle="#d9b28d";ctx.lineWidth=5;
+ctx.beginPath();ctx.moveTo(6,-49);ctx.lineTo(23,-34);ctx.lineTo(35,-29);ctx.stroke();
+// legs
+ctx.strokeStyle="#172030";ctx.lineWidth=7;
+ctx.beginPath();ctx.moveTo(-3,-35);ctx.lineTo(-12,-17);ctx.lineTo(4,-9);ctx.stroke();
+// helmet
+ctx.fillStyle="#252d39";ctx.beginPath();ctx.arc(-4,-55,12,0,Math.PI*2);ctx.fill();
+ctx.fillStyle=bikeColor;ctx.beginPath();ctx.moveTo(-15,-59);ctx.lineTo(0,-66);ctx.lineTo(10,-60);ctx.lineTo(-4,-54);ctx.fill();
+ctx.fillStyle="#b8e9ff";ctx.fillRect(-2,-59,11,4);
+ctx.restore();
 }
 
-function draw() {
-  const w=canvas.width,h=canvas.height;
-  const sky=ctx.createLinearGradient(0,0,0,h);
-  sky.addColorStop(0, track==="Estádio"?"#b7c8ef":"#78c9f4");
-  sky.addColorStop(1,"#e7f2fc");
-  ctx.fillStyle=sky;ctx.fillRect(0,0,w,h);
-
-  if(track==="Floresta"){
-    ctx.fillStyle="#367448";
-    for(let i=0;i<12;i++){
-      let x=((i*120-distance*0.25)%1200+1200)%1200-80;
-      ctx.beginPath();ctx.moveTo(x,ground(distance+x)-5);ctx.lineTo(x+35,150);ctx.lineTo(x+70,ground(distance+x)-5);ctx.fill();
-      ctx.fillStyle="#6d4b2c";ctx.fillRect(x+30,ground(distance+x)-35,10,35);ctx.fillStyle="#367448";
-    }
-  } else if(track==="Deserto"){
-    ctx.fillStyle="#e3c17a";ctx.fillRect(0,280,w,160);
-    ctx.fillStyle="#d0a353";
-    for(let i=0;i<5;i++){let x=((i*230-distance*0.12)%1200+1200)%1200-80;ctx.beginPath();ctx.ellipse(x,255,110,35,0,Math.PI,Math.PI*2);ctx.fill();}
-  } else if(track==="Montanha"){
-    ctx.fillStyle="#7e9aaf";
-    for(let i=0;i<8;i++){let x=((i*180-distance*0.1)%1300+1300)%1300-100;ctx.beginPath();ctx.moveTo(x,ground(distance+x));ctx.lineTo(x+100,90+Math.sin(i)*30);ctx.lineTo(x+220,ground(distance+x+220));ctx.fill();}
-  } else {
-    ctx.fillStyle="#7c8797";ctx.fillRect(0,80,w,190);
-    ctx.fillStyle="#394454";
-    for(let i=0;i<12;i++)ctx.fillRect(i*85,100,55,80);
-    ctx.fillStyle="#e8e8e8";
-    for(let i=0;i<12;i++)ctx.fillRect(i*85,185,55,8);
-  }
-
-  // Track surface
-  ctx.fillStyle=track==="Deserto"?"#bd8b4e":track==="Estádio"?"#a4a6a9":"#806044";
-  ctx.beginPath();ctx.moveTo(0,h);
-  for(let x=0;x<=w;x+=8)ctx.lineTo(x,ground(distance+x));
-  ctx.lineTo(w,h);ctx.closePath();ctx.fill();
-
-  ctx.strokeStyle="#d7c19b";ctx.lineWidth=4;ctx.beginPath();
-  for(let x=0;x<=w;x+=8){if(x===0)ctx.moveTo(x,ground(distance+x));else ctx.lineTo(x,ground(distance+x));}
-  ctx.stroke();
-
-  // Obstacles
-  obstacles.forEach(o=>{
-    const x=o.x-distance;
-    if(x>-70&&x<w+70){
-      const y=ground(o.x);
-      if(o.type==="bump"){
-        ctx.fillStyle="#63452f";
-        ctx.beginPath();ctx.ellipse(x,y-3,31,12,0,Math.PI,Math.PI*2);ctx.fill();
-      }else{
-        ctx.fillStyle="#5b5550";
-        ctx.beginPath();ctx.moveTo(x-16,y);ctx.lineTo(x-8,y-21);ctx.lineTo(x+8,y-25);ctx.lineTo(x+19,y);ctx.fill();
-      }
-    }
-  });
-
-  const bx=245, by=ground(distance+bx)-12;
-  drawBike(bx,by);
-  if(jumpHeight>12){
-    ctx.fillStyle="rgba(0,0,0,0.15)";
-    ctx.beginPath();ctx.ellipse(bx,ground(distance+bx)+3,37,6,0,0,Math.PI*2);ctx.fill();
-  }
-
-  ctx.fillStyle="#17202b";
-  ctx.font="bold 17px Arial";
-  ctx.fillText(track.toUpperCase(),20,30);
-  ctx.font="14px Arial";
-  ctx.fillText("DISTÂNCIA: "+Math.floor(distance/10)+" m",20,52);
+function draw(){
+const w=960,h=480;
+let sky=ctx.createLinearGradient(0,0,0,h);
+sky.addColorStop(0,track==="Estádio"?"#9daed0":"#62b8ee");
+sky.addColorStop(1,"#e4f2ff");
+ctx.fillStyle=sky;ctx.fillRect(0,0,w,h);
+// sun
+ctx.fillStyle="#fff2b0";ctx.beginPath();ctx.arc(800,75,33,0,7);ctx.fill();
+// distant landscape
+if(track==="Floresta"||track==="Montanha"){
+for(let i=0;i<12;i++){
+let x=((i*130-dist*.17)%1500+1500)%1500-150;
+ctx.fillStyle=track==="Montanha"?"#7b94a3":"#326b46";
+ctx.beginPath();ctx.moveTo(x,terrain(dist+x)-5);ctx.lineTo(x+55,track==="Montanha"?110:160);ctx.lineTo(x+110,terrain(dist+x+110)-5);ctx.fill();
+}
+}else if(track==="Deserto"){
+ctx.fillStyle="#e7c078";
+ctx.beginPath();ctx.moveTo(0,290);
+for(let x=0;x<=w;x+=10)ctx.lineTo(x,270+Math.sin((x+dist*.15)/120)*22);
+ctx.lineTo(w,h);ctx.lineTo(0,h);ctx.fill();
+}else{
+ctx.fillStyle="#465466";ctx.fillRect(0,90,w,150);
+for(let i=0;i<12;i++){ctx.fillStyle=i%2?"#d8e0e8":"#f2f2f2";ctx.fillRect(i*85,100,48,125);}
+ctx.fillStyle="#353e4b";ctx.fillRect(0,215,w,20);
+}
+// track surface
+ctx.fillStyle=track==="Deserto"?"#bc8d53":track==="Estádio"?"#85888d":"#76563a";
+ctx.beginPath();ctx.moveTo(0,h);
+for(let x=0;x<=w;x+=5)ctx.lineTo(x,terrain(dist+x));
+ctx.lineTo(w,h);ctx.closePath();ctx.fill();
+// track detail
+ctx.strokeStyle="#d4b18a";ctx.lineWidth=3;ctx.beginPath();
+for(let x=0;x<=w;x+=5){if(x===0)ctx.moveTo(x,terrain(dist+x));else ctx.lineTo(x,terrain(dist+x));}
+ctx.stroke();
+// tire marks
+ctx.strokeStyle="rgba(45,33,24,.3)";ctx.lineWidth=2;
+for(let i=0;i<4;i++){
+ctx.beginPath();
+for(let x=0;x<=w;x+=12){
+let y=terrain(dist+x)+12+i*5;
+if(x===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);
+}ctx.stroke();
+}
+// obstacles
+bumps.forEach(o=>{
+let x=o.x-dist;
+if(x>-60&&x<1000){
+let y=terrain(o.x);
+if(o.type==="bump"){
+ctx.fillStyle="#513a2a";ctx.beginPath();ctx.ellipse(x,y-2,29,12,0,Math.PI,Math.PI*2);ctx.fill();
+}else{
+ctx.fillStyle="#4e5357";ctx.beginPath();ctx.moveTo(x-16,y);ctx.lineTo(x-8,y-23);ctx.lineTo(x+7,y-28);ctx.lineTo(x+19,y);ctx.fill();
+}
+}
+});
+drawBike(245,terrain(dist+245)-17);
+// dust particles
+if(speed>45&&Math.random()<.65){
+ctx.fillStyle="rgba(210,185,148,.6)";
+ctx.beginPath();ctx.arc(200+Math.random()*25,terrain(dist+245)+Math.random()*10,2+Math.random()*3,0,7);ctx.fill();
+}
+ctx.fillStyle="#17202b";ctx.font="bold 17px Arial";ctx.fillText(track.toUpperCase(),20,30);
+ctx.font="14px Arial";ctx.fillText("DISTÂNCIA: "+Math.floor(dist/10)+" m",20,53);
 }
 
-function loop(now) {
-  if(!running)return;
-  const dt=Math.min((now-lastTime)/1000,0.04);
-  lastTime=now;
+function loop(now){
+if(!running)return;
+let dt=Math.min((now-last)/1000,.035);last=now;
+let accelerating=keys.ArrowRight||keys.KeyD||gas;
+let braking=keys.ArrowLeft||keys.KeyA||brake;
+let jumping=keys.Space||jumpButton;
 
-  const accel=keys.ArrowRight||keys.KeyD||holdAccel;
-  const brake=keys.ArrowLeft||keys.KeyA||holdBrake;
-  const jumping=keys.Space||holdJump;
+if(crash>0){
+crash-=dt;speed=Math.max(0,speed-130*dt);
+$("status").textContent="💥 Queda! Recupera o controlo.";
+}else{
+if(accelerating)speed+=power*dt;
+else speed-=7*dt;
+if(braking)speed-=190*dt;
+speed=clamp(speed,0,210);
+if(jumping&&height===0&&speed>20)vy=330;
+if(vy!==0||height>0){
+height+=vy*dt;vy-=650*dt;
+if(height<=0){height=0;vy=0;suspension=-5;}
+}else suspension*=.75;
+angle=keys.ArrowUp?-0.35:keys.ArrowDown?0.35:angle*.88;
+dist+=speed*dt*1.3;
+time+=dt;
 
-  if(crashTime>0) {
-    crashTime-=dt;
-    speed=Math.max(0,speed-110*dt);
-    $("status").textContent="💥 Queda! Recupera e continua.";
-  } else {
-    if(accel)speed+=95*dt;
-    else speed-=13*dt;
-    if(brake)speed-=125*dt;
-    speed=Math.max(0,Math.min(155,speed));
-    if(jumping&&jumpHeight===0&&speed>18)jumpVelocity=260;
-    if(jumpVelocity!==0||jumpHeight>0){
-      jumpHeight+=jumpVelocity*dt;
-      jumpVelocity-=620*dt;
-      if(jumpHeight<=0){jumpHeight=0;jumpVelocity=0;}
-    }
-    if(keys.ArrowUp)tilt=-1;
-    else if(keys.ArrowDown)tilt=1;
-    else tilt*=0.9;
-
-    distance+=speed*dt*0.8;
-    elapsed+=dt;
-
-    obstacles.forEach(o=>{
-      if(!o.passed&&o.x-distance>205&&o.x-distance<290){
-        o.passed=true;
-        if(jumpHeight<15){
-          if(o.type==="rock"){crashTime=1.1;speed*=0.35;}
-          else speed=Math.max(0,speed-13);
-        } else {
-          $("status").textContent="🔥 Bom salto!";
-        }
-      }
-    });
-
-    if(mode==="race"){
-      const newLap=Math.floor(distance/1800)+1;
-      if(newLap!==lap){lap=Math.min(3,newLap);$("lap").textContent=lap;}
-      if(distance>=5400){running=false;ended=true;$("status").textContent="🏆 Corrida terminada! Tempo: "+elapsed.toFixed(1)+" s";$("status").style.color="#69f0ae";}
-    } else if(mode==="time"&&elapsed>=60){
-      running=false;ended=true;
-      $("status").textContent="⏱️ Tempo terminado! Distância: "+Math.floor(distance/10)+" m";
-    }
-
-    if(obstacles.length&&obstacles[obstacles.length-1].x-distance<1200){
-      obstacles.push({x:distance+1800+Math.random()*700,type:Math.random()<0.7?"bump":"rock",passed:false});
-    }
-    $("status").style.color="#ffb36b";
-  }
-
-  $("speed").textContent=Math.round(speed);
-  $("timer").textContent=elapsed.toFixed(1);
-  draw();
-  if(running)animation=requestAnimationFrame(loop);
+bumps.forEach(o=>{
+if(!o.hit&&o.x-dist>210&&o.x-dist<285){
+o.hit=true;
+if(height<18){
+if(o.type==="rock"){crash=1.1;speed*=.3;}
+else {vy=110;speed=Math.max(0,speed-8);}
+}else $("status").textContent="🔥 Salto perfeito!";
+}
+});
+if(mode==="race"){
+lap=Math.min(3,Math.floor(dist/2600)+1);
+$("lap").textContent=lap;
+if(dist>=7800){running=false;$("status").textContent="🏆 Venceste a corrida!";}
+}else if(mode==="time"&&time>=60){
+running=false;$("status").textContent="⏱️ Tempo terminado! Distância: "+Math.floor(dist/10)+" m";
+}
+if(bumps.length&&bumps[bumps.length-1].x-dist<1300){
+bumps.push({x:dist+1800+Math.random()*800,type:Math.random()<.8?"bump":"rock",hit:false});
+}
+}
+$("speed").textContent=Math.round(speed);
+$("timer").textContent=time.toFixed(1);
+draw();
+if(running)raf=requestAnimationFrame(loop);
 }
 
 window.addEventListener("keydown",e=>{
-  if(["ArrowRight","ArrowLeft","ArrowUp","ArrowDown","Space"].includes(e.code))e.preventDefault();
-  keys[e.code]=true;
+if(["ArrowRight","ArrowLeft","ArrowUp","ArrowDown","Space"].includes(e.code))e.preventDefault();
+keys[e.code]=true;
 });
 window.addEventListener("keyup",e=>keys[e.code]=false);
-
-function holdButton(id,setter){
-  const el=$(id);
-  el.addEventListener("pointerdown",e=>{e.preventDefault();setter(true);});
-  ["pointerup","pointercancel","pointerleave"].forEach(ev=>el.addEventListener(ev,()=>setter(false)));
+function hold(id,set){
+const el=$(id);
+el.addEventListener("pointerdown",e=>{e.preventDefault();set(true);});
+["pointerup","pointercancel","pointerleave"].forEach(ev=>el.addEventListener(ev,()=>set(false)));
 }
-holdButton("accelerate",v=>holdAccel=v);
-holdButton("brake",v=>holdBrake=v);
-holdButton("jump",v=>holdJump=v);
-
-$("start").addEventListener("click",startGame);
-$("backMenu").addEventListener("click",()=>{
-  running=false;
-  cancelAnimationFrame(animation);
-  $("game").style.display="none";
-  $("menu").style.display="block";
-  $("message").textContent="Escolhe as opções e começa outra corrida!";
+hold("gas",v=>gas=v);
+hold("brakes",v=>brake=v);
+hold("jump",v=>jumpButton=v);
+$("start").addEventListener("click",start);
+$("menuBtn").addEventListener("click",()=>{
+running=false;cancelAnimationFrame(raf);
+$("game").style.display="none";$("menu").style.display="block";
 });
-
 draw();
 })();
 </script>
 </body>
 </html>
-
 
