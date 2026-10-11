@@ -1,271 +1,106 @@
+import os
 
-<!DOCTYPE html>
+html = r'''<!DOCTYPE html>
 <html lang="pt">
 <head>
 <meta charset="UTF-8">
-<title>MX Motocross</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MX Racing 2D</title>
 <style>
-body {
-  margin: 0;
-  background: #171717;
-  color: white;
-  text-align: center;
-  font-family: Arial;
-}
-h1 { color: #ff5722; }
-canvas {
-  width: 95%;
-  max-width: 1000px;
-  background: skyblue;
-  border: 3px solid white;
-}
-button {
-  padding: 12px 22px;
-  margin: 8px;
-  background: #ff5722;
-  color: white;
-  border: 0;
-  border-radius: 7px;
-  font-size: 17px;
-}
+:root{--orange:#ff5a24;--panel:#171b20;--text:#f5f5f5}
+*{box-sizing:border-box}
+body{margin:0;background:#0e1115;color:var(--text);font-family:system-ui,Arial,sans-serif;text-align:center}
+header{padding:12px 10px 5px}
+h1{margin:0;color:var(--orange);font-size:clamp(24px,4vw,38px);letter-spacing:1px}
+header p{margin:5px 0 12px;color:#c6cbd1}
+main{max-width:1200px;margin:auto;padding:0 10px 20px}
+canvas{display:block;width:100%;height:auto;border:2px solid #4c535c;border-radius:10px;background:#83ccef}
+.panel{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:10px;margin:12px auto;padding:12px;background:var(--panel);border:1px solid #343b44;border-radius:10px}
+label{display:flex;align-items:center;gap:7px;font-size:14px;color:#dce1e6}
+select,button{font:inherit;border:0;border-radius:7px;padding:10px 12px}
+select{background:#292f37;color:white;border:1px solid #4c535c}
+button{background:var(--orange);color:white;font-weight:750;cursor:pointer}
+button:hover{filter:brightness(1.1)}
+.hud{display:flex;flex-wrap:wrap;justify-content:center;gap:9px;margin:10px 0}
+.stat{background:#20262d;border:1px solid #38414b;border-radius:8px;padding:8px 13px;min-width:110px}
+.stat small{display:block;color:#aeb7c1;font-size:11px;text-transform:uppercase;letter-spacing:.7px}
+.stat strong{font-size:18px}
+.help{max-width:900px;margin:10px auto 20px;color:#c4cbd2;line-height:1.65;font-size:14px}
+kbd{display:inline-block;background:#272d34;border:1px solid #59616c;border-bottom-width:3px;border-radius:5px;padding:1px 6px;color:white}
+#message{min-height:24px;color:#ffd46b;font-weight:700;margin:7px}
+@media(max-width:600px){.panel{gap:7px}label{width:100%;justify-content:space-between}select{max-width:65%}}
 </style>
 </head>
 <body>
+<header>
+<h1>🏁 MX RACING 2D</h1>
+<p>Corridas de motocross • Saltos • Cavalinhos • Lama</p>
+</header>
+<main>
+<canvas id="game" width="1100" height="560" aria-label="Jogo de motocross 2D"></canvas>
 
-<h1>🏁 MX MOTOCROSS 🏁</h1>
-<p>ESPAÇO = SALTAR | SETA DIREITA = ACELERAR</p>
+<div class="panel">
+<label>Mota
+<select id="bikeChoice">
+<option value="honda">Honda CRF — vermelho</option>
+<option value="yamaha">Yamaha YZ — azul</option>
+<option value="ktm">KTM SX — laranja</option>
+<option value="kawasaki">Kawasaki KX — verde</option>
+</select></label>
+<label>Mapa
+<select id="mapChoice">
+<option value="track">Pista de motocross</option>
+<option value="forest">Floresta</option>
+<option value="mud">Circuito de lama</option>
+</select></label>
+<label>Voltas
+<select id="lapsChoice">
+<option value="2">2 voltas</option>
+<option value="3" selected>3 voltas</option>
+<option value="5">5 voltas</option>
+</select></label>
+<button id="startBtn">▶ Começar corrida</button>
+<button id="resetBtn">↻ Reiniciar</button>
+</div>
 
-<canvas id="game" width="1000" height="500"></canvas>
-<br>
-<button onclick="jump()">SALTAR</button>
-<button onclick="restart()">RECOMEÇAR</button>
-<p id="score">Distância: 0 m</p>
-
+<div class="hud">
+<div class="stat"><small>Velocidade</small><strong id="speed">0 km/h</strong></div>
+<div class="stat"><small>Volta</small><strong id="lap">1 / 3</strong></div>
+<div class="stat"><small>Tempo</small><strong id="time">00:00.0</strong></div>
+<div class="stat"><small>Posição</small><strong id="position">1.º / 2</strong></div>
+</div>
+<div id="message">Escolhe a mota e o mapa e carrega em “Começar corrida”.</div>
+<div class="help">
+<strong>Controlos:</strong>
+<kbd>→</kbd> acelerar · <kbd>←</kbd> travar · <kbd>↑</kbd> inclinar para trás / cavalinho ·
+<kbd>↓</kbd> inclinar para a frente · <kbd>Espaço</kbd> saltar · <kbd>R</kbd> recuperar da queda.
+<br>Faz o cavalinho com alguma velocidade e mantém <kbd>↑</kbd> sem inclinar demasiado. No ar, usa as setas para controlar a posição da mota.
+</div>
+</main>
 <script>
-const canvas = document.getElementById("game");
-const ctx = canvas.getContext("2d");
+(() => {
+const canvas=document.getElementById('game'), ctx=canvas.getContext('2d');
+const W=canvas.width,H=canvas.height, GROUND=410;
+const $=id=>document.getElementById(id);
+const bikeDefs={
+ honda:{name:'Honda CRF',color:'#e52b26',dark:'#8d1514'},
+ yamaha:{name:'Yamaha YZ',color:'#1685e8',dark:'#084b9a'},
+ ktm:{name:'KTM SX',color:'#ff7417',dark:'#b83a08'},
+ kawasaki:{name:'Kawasaki KX',color:'#4cc943',dark:'#167522'}
+};
+const maps={
+ track:{name:'Pista de motocross',sky:'#83ccef',far:'#79a66a',near:'#48784b',dirt:'#a86e3e',top:'#6b9f45',bump:0},
+ forest:{name:'Floresta',sky:'#9bd5e8',far:'#547d61',near:'#31583d',dirt:'#77502f',top:'#547f39',bump:1},
+ mud:{name:'Circuito de lama',sky:'#b6c8d1',far:'#798b7b',near:'#596b58',dirt:'#59422f',top:'#657d3e',bump:2}
+};
+let keys={}, state, particles=[], trackOffset=0, trees=[], lastStamp=0;
+function makeState(){
+ const id=$('bikeChoice').value, map=$('mapChoice').value;
+ return {bikeId:id,mapId:map, color:bikeDefs[id].color,
+ x:175,y:GROUND-20,vx:0,vy:0,angle:0,angV:0,air:false,
+ wheelie:0,crashed:false,finished:false,running:false,
+ distance
 
-let bike, obstacles, distance, speed, over;
 
-function restart() {
-  bike = { x: 150, y: 345, vy: 0, air: false };
-  obstacles = [
-    { x: 600, w: 90, h: 65 },
-    { x: 1050, w: 110, h: 90 },
-    { x: 1550, w: 90, h: 55 }
-  ];
-  distance = 0;
-  speed = 5;
-  over = false;
-}
-
-function jump() {
-  if (over) return;
-  if (!bike.air) {
-    bike.vy = -14;
-    bike.air = true;
-  }
-}
-
-document.addEventListener("keydown", e => {
-  if (e.code === "Space" || e.code === "ArrowUp") {
-    e.preventDefault();
-    jump();
-  }
-});
-
-function drawBike() {
-  const x = bike.x, y = bike.y;
-
-  // Pneus grossos com relevos
-  for (const wx of [x, x + 65]) {
-    ctx.fillStyle = "#171717";
-    ctx.beginPath();
-    ctx.arc(wx, y, 22, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.strokeStyle = "#777";
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.arc(wx, y, 13, 0, Math.PI * 2);
-    ctx.stroke();
-
-    ctx.fillStyle = "#aaa";
-    ctx.beginPath();
-    ctx.arc(wx, y, 5, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.strokeStyle = "#222";
-    ctx.lineWidth = 4;
-    for (let a = 0; a < 8; a++) {
-      const angle = a * Math.PI / 4;
-      ctx.beginPath();
-      ctx.moveTo(wx + 18 * Math.cos(angle),
-                 y + 18 * Math.sin(angle));
-      ctx.lineTo(wx + 24 * Math.cos(angle),
-                 y + 24 * Math.sin(angle));
-      ctx.stroke();
-    }
-  }
-
-  // Quadro da mota
-  ctx.strokeStyle = "#ed3020";
-  ctx.lineWidth = 8;
-  ctx.beginPath();
-  ctx.moveTo(x, y);
-  ctx.lineTo(x + 25, y - 28);
-  ctx.lineTo(x + 65, y);
-  ctx.lineTo(x, y);
-  ctx.stroke();
-
-  // Motor
-  ctx.fillStyle = "#888";
-  ctx.fillRect(x + 23, y - 15, 23, 20);
-
-  // Suspensão e guiador
-  ctx.strokeStyle = "#ddd";
-  ctx.lineWidth = 5;
-  ctx.beginPath();
-  ctx.moveTo(x + 43, y - 29);
-  ctx.lineTo(x + 65, y);
-  ctx.stroke();
-
-  ctx.strokeStyle = "#222";
-  ctx.beginPath();
-  ctx.moveTo(x + 39, y - 35);
-  ctx.lineTo(x + 60, y - 35);
-  ctx.stroke();
-
-  // Piloto
-  ctx.strokeStyle = "#1749a1";
-  ctx.lineWidth = 12;
-  ctx.beginPath();
-  ctx.moveTo(x + 29, y - 43);
-  ctx.lineTo(x + 42, y - 27);
-  ctx.stroke();
-
-  ctx.fillStyle = "#ffd32a";
-  ctx.beginPath();
-  ctx.arc(x + 25, y - 58, 13, 0, Math.PI * 2);
-  ctx.fill();
-
-  ctx.fillStyle = "#222";
-  ctx.fillRect(x + 25, y - 61, 18, 5);
-}
-
-function drawBackground() {
-  ctx.fillStyle = "#83d8ff";
-  ctx.fillRect(0, 0, 1000, 500);
-
-  ctx.fillStyle = "#ffdf62";
-  ctx.beginPath();
-  ctx.arc(830, 75, 38, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Montanhas
-  ctx.fillStyle = "#669767";
-  ctx.beginPath();
-  ctx.moveTo(0, 330);
-  ctx.lineTo(170, 120);
-  ctx.lineTo(350, 330);
-  ctx.lineTo(570, 150);
-  ctx.lineTo(780, 330);
-  ctx.lineTo(1000, 180);
-  ctx.lineTo(1000, 500);
-  ctx.lineTo(0, 500);
-  ctx.fill();
-
-  // Pista
-  ctx.fillStyle = "#85512e";
-  ctx.fillRect(0, 370, 1000, 130);
-  ctx.fillStyle = "#48a63b";
-  ctx.fillRect(0, 363, 1000, 9);
-
-  // Textura
-  for (let i = 0; i < 40; i++) {
-    let x = ((i * 71 - distance * 3) % 1000 + 1000) % 1000;
-    ctx.fillStyle = i % 2 ? "#b07b49" : "#674026";
-    ctx.fillRect(x, 400 + (i % 5) * 17, 12, 3);
-  }
-}
-
-function update() {
-  if (over) return;
-
-  bike.vy += 0.65;
-  bike.y += bike.vy;
-
-  if (bike.y >= 345) {
-    bike.y = 345;
-    bike.vy = 0;
-    bike.air = false;
-  }
-
-  if (keys["ArrowRight"]) speed = Math.min(10, speed + 0.08);
-  if (keys["ArrowLeft"]) speed = Math.max(3, speed - 0.08);
-
-  distance += speed / 10;
-
-  obstacles.forEach(o => {
-    o.x -= speed;
-
-    if (o.x + o.w < 0) {
-      o.x = 1050 + Math.random() * 500;
-      o.h = 50 + Math.random() * 60;
-    }
-
-    // Rampa de terra
-    ctx.fillStyle = "#a56c39";
-    ctx.beginPath();
-    ctx.moveTo(o.x, 370);
-    ctx.lineTo(o.x + o.w * 0.65, 370 - o.h);
-    ctx.lineTo(o.x + o.w, 370);
-    ctx.closePath();
-    ctx.fill();
-
-    // Colisão com a rampa
-    if (
-      bike.x + 60 > o.x + 5 &&
-      bike.x + 5 < o.x + o.w - 5 &&
-      bike.y + 15 > 370 - o.h
-    ) {
-      over = true;
-    }
-  });
-
-  document.getElementById("score").textContent =
-    "Distância: " + Math.floor(distance) + " m";
-}
-
-const keys = {};
-document.addEventListener("keydown", e => keys[e.code] = true);
-document.addEventListener("keyup", e => keys[e.code] = false);
-
-function loop() {
-  drawBackground();
-  update();
-  drawBike();
-
-  if (over) {
-    ctx.fillStyle = "rgba(0,0,0,0.7)";
-    ctx.fillRect(0, 0, 1000, 500);
-    ctx.fillStyle = "#ff5722";
-    ctx.font = "bold 48px Arial";
-    ctx.textAlign = "center";
-    ctx.fillText("FIM DE JOGO", 500, 230);
-    ctx.fillStyle = "white";
-    ctx.font = "23px Arial";
-    ctx.fillText("Carrega em RECOMEÇAR", 500, 275);
-    ctx.textAlign = "left";
-  }
-
-  requestAnimationFrame(loop);
-}
-
-restart();
-loop();
-</script>
-</body>
-</html>
 
 
