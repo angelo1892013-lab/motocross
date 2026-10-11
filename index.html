@@ -3,240 +3,269 @@
 <html lang="pt">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>MX Dirt Racing</title>
+<title>MX Motocross</title>
 <style>
-*{box-sizing:border-box}
-body{margin:0;background:#15191c;color:white;font-family:Arial;text-align:center}
-h1{color:#ff5429;margin:14px}
-canvas{display:block;width:96%;max-width:1100px;margin:auto;border:3px solid #444;border-radius:8px}
-p{color:#ddd}
-button{padding:12px 20px;margin:5px;border:0;border-radius:6px;background:#ff5429;color:white;font-weight:bold;font-size:16px}
+body {
+  margin: 0;
+  background: #171717;
+  color: white;
+  text-align: center;
+  font-family: Arial;
+}
+h1 { color: #ff5722; }
+canvas {
+  width: 95%;
+  max-width: 1000px;
+  background: skyblue;
+  border: 3px solid white;
+}
+button {
+  padding: 12px 22px;
+  margin: 8px;
+  background: #ff5722;
+  color: white;
+  border: 0;
+  border-radius: 7px;
+  font-size: 17px;
+}
 </style>
 </head>
 <body>
-<h1>🏁 MX DIRT RACING</h1>
-<p>ESPAÇO / ↑ = saltar | → = acelerar | ← = travar</p>
-<canvas id="game" width="1100" height="600"></canvas>
+
+<h1>🏁 MX MOTOCROSS 🏁</h1>
+<p>ESPAÇO = SALTAR | SETA DIREITA = ACELERAR</p>
+
+<canvas id="game" width="1000" height="500"></canvas>
+<br>
 <button onclick="jump()">SALTAR</button>
-<button onclick="reset()">RECOMEÇAR</button>
-<p id="stats">Distância: 0 m</p>
+<button onclick="restart()">RECOMEÇAR</button>
+<p id="score">Distância: 0 m</p>
 
 <script>
-const c=document.getElementById("game");
-const ctx=c.getContext("2d");
-const W=c.width,H=c.height;
-let bike,ramps,distance,speed,gameOver,groundOffset;
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
 
-function reset(){
- bike={x:190,y:390,vy:0,air:false,angle:0};
- ramps=[];
- for(let i=0;i<7;i++)
-   ramps.push({x:650+i*290,w:85,h:45+Math.random()*35});
- distance=0;speed=6;gameOver=false;groundOffset=0;
+let bike, obstacles, distance, speed, over;
+
+function restart() {
+  bike = { x: 150, y: 345, vy: 0, air: false };
+  obstacles = [
+    { x: 600, w: 90, h: 65 },
+    { x: 1050, w: 110, h: 90 },
+    { x: 1550, w: 90, h: 55 }
+  ];
+  distance = 0;
+  speed = 5;
+  over = false;
 }
-function jump(){
- if(gameOver){reset();return}
- if(!bike.air){bike.vy=-17;bike.air=true}
+
+function jump() {
+  if (over) return;
+  if (!bike.air) {
+    bike.vy = -14;
+    bike.air = true;
+  }
 }
-document.addEventListener("keydown",e=>{
- if(["Space","ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].includes(e.code))e.preventDefault();
- if(e.code==="Space"||e.code==="ArrowUp")jump();
+
+document.addEventListener("keydown", e => {
+  if (e.code === "Space" || e.code === "ArrowUp") {
+    e.preventDefault();
+    jump();
+  }
 });
-let keys={};
-document.addEventListener("keydown",e=>keys[e.code]=true);
-document.addEventListener("keyup",e=>keys[e.code]=false);
 
-function polygon(points,color){
- ctx.fillStyle=color;ctx.beginPath();
- ctx.moveTo(points[0][0],points[0][1]);
- for(let p of points.slice(1))ctx.lineTo(p[0],p[1]);
- ctx.closePath();ctx.fill();
+function drawBike() {
+  const x = bike.x, y = bike.y;
+
+  // Pneus grossos com relevos
+  for (const wx of [x, x + 65]) {
+    ctx.fillStyle = "#171717";
+    ctx.beginPath();
+    ctx.arc(wx, y, 22, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.strokeStyle = "#777";
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(wx, y, 13, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.fillStyle = "#aaa";
+    ctx.beginPath();
+    ctx.arc(wx, y, 5, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.strokeStyle = "#222";
+    ctx.lineWidth = 4;
+    for (let a = 0; a < 8; a++) {
+      const angle = a * Math.PI / 4;
+      ctx.beginPath();
+      ctx.moveTo(wx + 18 * Math.cos(angle),
+                 y + 18 * Math.sin(angle));
+      ctx.lineTo(wx + 24 * Math.cos(angle),
+                 y + 24 * Math.sin(angle));
+      ctx.stroke();
+    }
+  }
+
+  // Quadro da mota
+  ctx.strokeStyle = "#ed3020";
+  ctx.lineWidth = 8;
+  ctx.beginPath();
+  ctx.moveTo(x, y);
+  ctx.lineTo(x + 25, y - 28);
+  ctx.lineTo(x + 65, y);
+  ctx.lineTo(x, y);
+  ctx.stroke();
+
+  // Motor
+  ctx.fillStyle = "#888";
+  ctx.fillRect(x + 23, y - 15, 23, 20);
+
+  // Suspensão e guiador
+  ctx.strokeStyle = "#ddd";
+  ctx.lineWidth = 5;
+  ctx.beginPath();
+  ctx.moveTo(x + 43, y - 29);
+  ctx.lineTo(x + 65, y);
+  ctx.stroke();
+
+  ctx.strokeStyle = "#222";
+  ctx.beginPath();
+  ctx.moveTo(x + 39, y - 35);
+  ctx.lineTo(x + 60, y - 35);
+  ctx.stroke();
+
+  // Piloto
+  ctx.strokeStyle = "#1749a1";
+  ctx.lineWidth = 12;
+  ctx.beginPath();
+  ctx.moveTo(x + 29, y - 43);
+  ctx.lineTo(x + 42, y - 27);
+  ctx.stroke();
+
+  ctx.fillStyle = "#ffd32a";
+  ctx.beginPath();
+  ctx.arc(x + 25, y - 58, 13, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = "#222";
+  ctx.fillRect(x + 25, y - 61, 18, 5);
 }
 
-function scenery(){
- let sky=ctx.createLinearGradient(0,0,0,600);
- sky.addColorStop(0,"#65bde9");sky.addColorStop(1,"#e5e6ca");
- ctx.fillStyle=sky;ctx.fillRect(0,0,W,H);
+function drawBackground() {
+  ctx.fillStyle = "#83d8ff";
+  ctx.fillRect(0, 0, 1000, 500);
 
- ctx.fillStyle="#ffe17b";ctx.beginPath();
- ctx.arc(900,90,43,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle = "#ffdf62";
+  ctx.beginPath();
+  ctx.arc(830, 75, 38, 0, Math.PI * 2);
+  ctx.fill();
 
- polygon([[0,340],[130,170],[270,330],[430,150],
- [610,335],[790,180],[970,325],[1100,220],[1100,600],[0,600]],"#72966c");
+  // Montanhas
+  ctx.fillStyle = "#669767";
+  ctx.beginPath();
+  ctx.moveTo(0, 330);
+  ctx.lineTo(170, 120);
+  ctx.lineTo(350, 330);
+  ctx.lineTo(570, 150);
+  ctx.lineTo(780, 330);
+  ctx.lineTo(1000, 180);
+  ctx.lineTo(1000, 500);
+  ctx.lineTo(0, 500);
+  ctx.fill();
 
- // Árvores
- for(let i=0;i<11;i++){
-   let x=((i*145-distance*0.18)%1250+1250)%1250-70;
-   ctx.fillStyle="#62432c";ctx.fillRect(x,275,15,80);
-   ctx.fillStyle="#245f39";
-   ctx.beginPath();ctx.arc(x+7,260,40,0,Math.PI*2);ctx.fill();
- }
+  // Pista
+  ctx.fillStyle = "#85512e";
+  ctx.fillRect(0, 370, 1000, 130);
+  ctx.fillStyle = "#48a63b";
+  ctx.fillRect(0, 363, 1000, 9);
 
- // Pista de terra
- ctx.fillStyle="#80502d";ctx.fillRect(0,350,W,250);
- ctx.fillStyle="#4d9a36";ctx.fillRect(0,345,W,10);
- ctx.fillStyle="#c2935d";ctx.fillRect(0,360,W,8);
-
- // Textura da terra
- for(let i=0;i<60;i++){
-   let x=((i*47-distance*2)%W+W)%W;
-   ctx.fillStyle=i%2?"#62402a":"#b47b45";
-   ctx.fillRect(x,390+(i%7)*25,10+(i%5)*3,3);
- }
+  // Textura
+  for (let i = 0; i < 40; i++) {
+    let x = ((i * 71 - distance * 3) % 1000 + 1000) % 1000;
+    ctx.fillStyle = i % 2 ? "#b07b49" : "#674026";
+    ctx.fillRect(x, 400 + (i % 5) * 17, 12, 3);
+  }
 }
 
-function drawBike(){
- ctx.save();
- ctx.translate(bike.x,bike.y);
- ctx.rotate(bike.angle);
+function update() {
+  if (over) return;
 
- // Sombra
- ctx.fillStyle="rgba(0,0,0,.2)";
- ctx.beginPath();ctx.ellipse(24,9,72,10,0,0,Math.PI*2);ctx.fill();
+  bike.vy += 0.65;
+  bike.y += bike.vy;
 
- // Pneus grossos de motocross
- for(let x of [-30,42]){
-   ctx.fillStyle="#171717";ctx.beginPath();
-   ctx.arc(x,0,25,0,Math.PI*2);ctx.fill();
-   ctx.strokeStyle="#555";ctx.lineWidth=2;ctx.stroke();
-   ctx.strokeStyle="#b6b6b6";ctx.lineWidth=2;
-   for(let a=0;a<8;a++){
-     let ang=a*Math.PI/4;
-     ctx.beginPath();ctx.moveTo(x,0);
-     ctx.lineTo(x+19*Math.cos(ang),19*Math.sin(ang));ctx.stroke();
-   }
-   ctx.fillStyle="#aaa";ctx.beginPath();
-   ctx.arc(x,0,5,0,Math.PI*2);ctx.fill();
-   // Relevo dos pneus
-   ctx.strokeStyle="#222";ctx.lineWidth=4;
-   for(let a=0;a<8;a++){
-     let ang=a*Math.PI/4;
-     ctx.beginPath();
-     ctx.moveTo(x+21*Math.cos(ang),21*Math.sin(ang));
-     ctx.lineTo(x+26*Math.cos(ang),26*Math.sin(ang));ctx.stroke();
-   }
- }
+  if (bike.y >= 345) {
+    bike.y = 345;
+    bike.vy = 0;
+    bike.air = false;
+  }
 
- // Quadro, motor e escape
- ctx.strokeStyle="#ef3b25";ctx.lineWidth=9;
- ctx.beginPath();ctx.moveTo(-30,0);ctx.lineTo(-8,-24);
- ctx.lineTo(42,0);ctx.lineTo(-30,0);
- ctx.moveTo(-8,-24);ctx.lineTo(5,0);ctx.stroke();
+  if (keys["ArrowRight"]) speed = Math.min(10, speed + 0.08);
+  if (keys["ArrowLeft"]) speed = Math.max(3, speed - 0.08);
 
- ctx.fillStyle="#d2d4d6";
- ctx.fillRect(-5,-6,25,19);
- ctx.fillStyle="#34383c";
- ctx.fillRect(-9,-9,20,14);
- ctx.strokeStyle="#c9c9c9";ctx.lineWidth=5;
- ctx.beginPath();ctx.moveTo(7,-21);ctx.lineTo(35,-24);
- ctx.stroke();
+  distance += speed / 10;
 
- // Suspensão dianteira e guiador
- ctx.strokeStyle="#ddd";ctx.lineWidth=5;
- ctx.beginPath();ctx.moveTo(28,-23);ctx.lineTo(42,0);ctx.stroke();
- ctx.strokeStyle="#202020";ctx.lineWidth=5;
- ctx.beginPath();ctx.moveTo(23,-31);ctx.lineTo(45,-32);ctx.stroke();
+  obstacles.forEach(o => {
+    o.x -= speed;
 
- // Guarda-lamas e banco
- polygon([[-45,-22],[-28,-29],[-4,-25],[-14,-19]],"#ef3b25");
- polygon([[1,-28],[25,-30],[33,-26],[10,-23]],"#171717");
+    if (o.x + o.w < 0) {
+      o.x = 1050 + Math.random() * 500;
+      o.h = 50 + Math.random() * 60;
+    }
 
- // Pernas do piloto
- ctx.strokeStyle="#202a45";ctx.lineWidth=10;
- ctx.beginPath();ctx.moveTo(-3,-47);ctx.lineTo(13,-29);
- ctx.lineTo(3,-13);ctx.stroke();
+    // Rampa de terra
+    ctx.fillStyle = "#a56c39";
+    ctx.beginPath();
+    ctx.moveTo(o.x, 370);
+    ctx.lineTo(o.x + o.w * 0.65, 370 - o.h);
+    ctx.lineTo(o.x + o.w, 370);
+    ctx.closePath();
+    ctx.fill();
 
- // Corpo e braços
- ctx.strokeStyle="#e52e25";ctx.lineWidth=15;
- ctx.beginPath();ctx.moveTo(-5,-63);ctx.lineTo(4,-43);ctx.stroke();
- ctx.strokeStyle="#222";ctx.lineWidth=7;
- ctx.beginPath();ctx.moveTo(-1,-57);ctx.lineTo(26,-31);
- ctx.stroke();
+    // Colisão com a rampa
+    if (
+      bike.x + 60 > o.x + 5 &&
+      bike.x + 5 < o.x + o.w - 5 &&
+      bike.y + 15 > 370 - o.h
+    ) {
+      over = true;
+    }
+  });
 
- // Capacete
- ctx.fillStyle="#f7d329";ctx.beginPath();
- ctx.arc(-10,-75,15,0,Math.PI*2);ctx.fill();
- ctx.fillStyle="#e33a25";
- ctx.beginPath();ctx.moveTo(-22,-81);ctx.lineTo(-39,-76);
- ctx.lineTo(-22,-72);ctx.closePath();ctx.fill();
- ctx.fillStyle="#252a30";ctx.fillRect(-5,-79,10,5);
-
- ctx.restore();
+  document.getElementById("score").textContent =
+    "Distância: " + Math.floor(distance) + " m";
 }
 
-function drawRamp(r){
- let x=r.x,y=350,h=r.h,w=r.w;
- // Monte de terra com perfil de rampa
- polygon([[x,y],[x+w*.38,y-h],[x+w,y],[x+w,y+10]],"#9a6235");
- polygon([[x+5,y],[x+w*.38,y-h+7],[x+w*.42,y-h+13],
-          [x+w*.12,y+4]],"#c48a50");
- // Marcas de pneus na rampa
- ctx.strokeStyle="#694226";ctx.lineWidth=4;
- ctx.beginPath();ctx.moveTo(x+12,y-3);ctx.lineTo(x+w*.36,y-h+8);ctx.stroke();
- ctx.fillStyle="#d0a06c";
- ctx.fillRect(x+w*.48,y-3,15,3);
+const keys = {};
+document.addEventListener("keydown", e => keys[e.code] = true);
+document.addEventListener("keyup", e => keys[e.code] = false);
+
+function loop() {
+  drawBackground();
+  update();
+  drawBike();
+
+  if (over) {
+    ctx.fillStyle = "rgba(0,0,0,0.7)";
+    ctx.fillRect(0, 0, 1000, 500);
+    ctx.fillStyle = "#ff5722";
+    ctx.font = "bold 48px Arial";
+    ctx.textAlign = "center";
+    ctx.fillText("FIM DE JOGO", 500, 230);
+    ctx.fillStyle = "white";
+    ctx.font = "23px Arial";
+    ctx.fillText("Carrega em RECOMEÇAR", 500, 275);
+    ctx.textAlign = "left";
+  }
+
+  requestAnimationFrame(loop);
 }
 
-function update(){
- if(gameOver)return;
-
- if(keys.ArrowRight)speed=Math.min(11,speed+.08);
- else speed=Math.max(5,speed-.01);
- if(keys.ArrowLeft)speed=Math.max(3,speed-.12);
-
- bike.vy+=.72;
- bike.y+=bike.vy;
- if(bike.y>=320){bike.y=320;bike.vy=0;bike.air=false;bike.angle=0}
- if(bike.air)bike.angle+=.015;
-
- distance+=speed*.09;
- groundOffset+=speed;
-
- for(let r of ramps){
-   r.x-=speed;
-   if(r.x+r.w<0){
-     r.x=W+Math.random()*300;
-     r.h=45+Math.random()*40;
-   }
-
-   // Saltar automaticamente ao chegar à rampa
-   if(!bike.air&&r.x<bike.x+30&&r.x+r.w>bike.x-25&&bike.y>=319){
-     bike.vy=-13;
-     bike.air=true;
-   }
-
-   // Colisão com a frente da rampa se não saltar alto
-   if(!bike.air&&r.x<bike.x+38&&r.x+r.w>bike.x-20){
-     // A rampa funciona como salto
-   }
- }
- document.getElementById("stats").textContent=
-   "Distância: "+Math.floor(distance)+" m | Velocidade: "+Math.floor(speed*9)+" km/h";
-}
-
-function draw(){
- scenery();
- for(let r of ramps)drawRamp(r);
- drawBike();
-
- ctx.fillStyle="rgba(0,0,0,.5)";
- ctx.fillRect(15,15,250,65);
- ctx.fillStyle="white";ctx.font="bold 22px Arial";
- ctx.fillText("MX DIRT RACING",28,43);
- ctx.font="17px Arial";ctx.fillText("DISTÂNCIA "+Math.floor(distance)+" m",28,67);
-
- if(gameOver){
-   ctx.fillStyle="rgba(0,0,0,.7)";ctx.fillRect(0,0,W,H);
-   ctx.textAlign="center";ctx.fillStyle="#ff5429";
-   ctx.font="bold 55px Arial";ctx.fillText("FIM DE CORRIDA",W/2,250);
-   ctx.fillStyle="white";ctx.font="25px Arial";
-   ctx.fillText("Carrega em RECOMEÇAR",W/2,300);
-   ctx.textAlign="left";
- }
-}
-function loop(){update();draw();requestAnimationFrame(loop)}
-reset();loop();
+restart();
+loop();
 </script>
 </body>
 </html>
+
+
