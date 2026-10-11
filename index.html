@@ -1,106 +1,362 @@
-import os
 
-html = r'''<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>MX Racing 2D</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MX Motocross Racing</title>
 <style>
-:root{--orange:#ff5a24;--panel:#171b20;--text:#f5f5f5}
 *{box-sizing:border-box}
-body{margin:0;background:#0e1115;color:var(--text);font-family:system-ui,Arial,sans-serif;text-align:center}
-header{padding:12px 10px 5px}
-h1{margin:0;color:var(--orange);font-size:clamp(24px,4vw,38px);letter-spacing:1px}
-header p{margin:5px 0 12px;color:#c6cbd1}
-main{max-width:1200px;margin:auto;padding:0 10px 20px}
-canvas{display:block;width:100%;height:auto;border:2px solid #4c535c;border-radius:10px;background:#83ccef}
-.panel{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:10px;margin:12px auto;padding:12px;background:var(--panel);border:1px solid #343b44;border-radius:10px}
-label{display:flex;align-items:center;gap:7px;font-size:14px;color:#dce1e6}
-select,button{font:inherit;border:0;border-radius:7px;padding:10px 12px}
-select{background:#292f37;color:white;border:1px solid #4c535c}
-button{background:var(--orange);color:white;font-weight:750;cursor:pointer}
-button:hover{filter:brightness(1.1)}
-.hud{display:flex;flex-wrap:wrap;justify-content:center;gap:9px;margin:10px 0}
-.stat{background:#20262d;border:1px solid #38414b;border-radius:8px;padding:8px 13px;min-width:110px}
-.stat small{display:block;color:#aeb7c1;font-size:11px;text-transform:uppercase;letter-spacing:.7px}
-.stat strong{font-size:18px}
-.help{max-width:900px;margin:10px auto 20px;color:#c4cbd2;line-height:1.65;font-size:14px}
-kbd{display:inline-block;background:#272d34;border:1px solid #59616c;border-bottom-width:3px;border-radius:5px;padding:1px 6px;color:white}
-#message{min-height:24px;color:#ffd46b;font-weight:700;margin:7px}
-@media(max-width:600px){.panel{gap:7px}label{width:100%;justify-content:space-between}select{max-width:65%}}
+body{margin:0;background:#10151c;color:white;font-family:Arial,sans-serif;text-align:center}
+header{padding:18px;background:#080b10;border-bottom:3px solid #f97316}
+h1{margin:0;color:#ff7b22;font-size:32px}
+h2{color:#ff9a43}
+.panel{max-width:1000px;margin:20px auto;padding:20px;background:#1b2531;border-radius:14px}
+.choices{display:flex;justify-content:center;gap:12px;flex-wrap:wrap}
+.choice{background:#283747;border:2px solid #536578;border-radius:10px;padding:12px;cursor:pointer;min-width:130px}
+.choice.selected{border-color:#ff7b22;background:#48301f}
+.choice b{display:block;margin-bottom:7px}
+button{border:0;border-radius:9px;padding:13px 20px;background:#ff7b22;color:#111;font-size:16px;font-weight:bold;cursor:pointer;margin:5px}
+button:hover{background:#ffa45f}
+select{padding:12px;border-radius:8px;margin:5px}
+#game{display:none;max-width:1000px;margin:20px auto;padding:10px;background:#1b2531;border-radius:12px}
+canvas{width:100%;background:#9bd7f5;border-radius:8px;display:block}
+.hud{display:flex;justify-content:space-around;flex-wrap:wrap;gap:10px;padding:12px;font-weight:bold}
+#message{color:#ffb36b;min-height:22px}
+.controls{color:#d5e1ee;font-size:14px;line-height:1.8}
 </style>
 </head>
 <body>
 <header>
-<h1>🏁 MX RACING 2D</h1>
-<p>Corridas de motocross • Saltos • Cavalinhos • Lama</p>
+<h1>🏁 MX MOTOCROSS RACING</h1>
+<p>Escolhe a tua mota. Escolhe a pista. Corre!</p>
 </header>
-<main>
-<canvas id="game" width="1100" height="560" aria-label="Jogo de motocross 2D"></canvas>
 
-<div class="panel">
-<label>Mota
-<select id="bikeChoice">
-<option value="honda">Honda CRF — vermelho</option>
-<option value="yamaha">Yamaha YZ — azul</option>
-<option value="ktm">KTM SX — laranja</option>
-<option value="kawasaki">Kawasaki KX — verde</option>
-</select></label>
-<label>Mapa
-<select id="mapChoice">
-<option value="track">Pista de motocross</option>
-<option value="forest">Floresta</option>
-<option value="mud">Circuito de lama</option>
-</select></label>
-<label>Voltas
-<select id="lapsChoice">
-<option value="2">2 voltas</option>
-<option value="3" selected>3 voltas</option>
-<option value="5">5 voltas</option>
-</select></label>
-<button id="startBtn">▶ Começar corrida</button>
-<button id="resetBtn">↻ Reiniciar</button>
+<section class="panel" id="menu">
+<h2>1. Escolhe a tua mota</h2>
+<div class="choices" id="bikes">
+<div class="choice selected" data-bike="Honda" data-color="#e62929"><b>🔴 HONDA</b>CRF 250</div>
+<div class="choice" data-bike="Yamaha" data-color="#247bff"><b>🔵 YAMAHA</b>YZ 250</div>
+<div class="choice" data-bike="KTM" data-color="#ff7b19"><b>🟠 KTM</b>250 SX</div>
+<div class="choice" data-bike="Kawasaki" data-color="#35ce58"><b>🟢 KAWASAKI</b>KX 250</div>
 </div>
 
+<h2>2. Escolhe a pista</h2>
+<div class="choices" id="tracks">
+<div class="choice selected" data-track="Floresta"><b>🌲 Floresta</b>Terra e lombas</div>
+<div class="choice" data-track="Deserto"><b>🏜️ Deserto</b>Pista rápida</div>
+<div class="choice" data-track="Montanha"><b>⛰️ Montanha</b>Subidas e descidas</div>
+<div class="choice" data-track="Estádio"><b>🏟️ Estádio</b>Pista de competição</div>
+</div>
+
+<h2>3. Modo de jogo</h2>
+<select id="mode">
+<option value="race">Corrida — 3 voltas</option>
+<option value="time">Contra o tempo — 60 segundos</option>
+<option value="free">Treino livre</option>
+</select>
+<br><br>
+<button id="start">🏁 START — INICIAR JOGO</button>
+<p id="message">Escolhe as opções e começa a corrida!</p>
+</section>
+
+<section id="game">
 <div class="hud">
-<div class="stat"><small>Velocidade</small><strong id="speed">0 km/h</strong></div>
-<div class="stat"><small>Volta</small><strong id="lap">1 / 3</strong></div>
-<div class="stat"><small>Tempo</small><strong id="time">00:00.0</strong></div>
-<div class="stat"><small>Posição</small><strong id="position">1.º / 2</strong></div>
+<span>🏍️ Mota: <span id="hudBike">Honda</span></span>
+<span>📍 Pista: <span id="hudTrack">Floresta</span></span>
+<span>⚡ Velocidade: <span id="speed">0</span> km/h</span>
+<span>🏆 Volta: <span id="lap">1</span>/3</span>
+<span>⏱️ Tempo: <span id="timer">0.0</span>s</span>
 </div>
-<div id="message">Escolhe a mota e o mapa e carrega em “Começar corrida”.</div>
-<div class="help">
-<strong>Controlos:</strong>
-<kbd>→</kbd> acelerar · <kbd>←</kbd> travar · <kbd>↑</kbd> inclinar para trás / cavalinho ·
-<kbd>↓</kbd> inclinar para a frente · <kbd>Espaço</kbd> saltar · <kbd>R</kbd> recuperar da queda.
-<br>Faz o cavalinho com alguma velocidade e mantém <kbd>↑</kbd> sem inclinar demasiado. No ar, usa as setas para controlar a posição da mota.
+<canvas id="canvas" width="960" height="440"></canvas>
+<div class="controls">
+<b>Controlos:</b> → Acelerar | ← Travar | ↑ Inclinar para trás | ↓ Inclinar para a frente | ESPAÇO Saltar<br>
+No telemóvel, também podes usar os botões abaixo.
 </div>
-</main>
+<div>
+<button id="accelerate">➡️ ACELERAR</button>
+<button id="brake">⬅️ TRAVAR</button>
+<button id="jump">⬆️ SALTAR</button>
+<button id="backMenu">🏠 MENU</button>
+</div>
+<p id="status">Boa corrida!</p>
+</section>
+
 <script>
-(() => {
-const canvas=document.getElementById('game'), ctx=canvas.getContext('2d');
-const W=canvas.width,H=canvas.height, GROUND=410;
-const $=id=>document.getElementById(id);
-const bikeDefs={
- honda:{name:'Honda CRF',color:'#e52b26',dark:'#8d1514'},
- yamaha:{name:'Yamaha YZ',color:'#1685e8',dark:'#084b9a'},
- ktm:{name:'KTM SX',color:'#ff7417',dark:'#b83a08'},
- kawasaki:{name:'Kawasaki KX',color:'#4cc943',dark:'#167522'}
-};
-const maps={
- track:{name:'Pista de motocross',sky:'#83ccef',far:'#79a66a',near:'#48784b',dirt:'#a86e3e',top:'#6b9f45',bump:0},
- forest:{name:'Floresta',sky:'#9bd5e8',far:'#547d61',near:'#31583d',dirt:'#77502f',top:'#547f39',bump:1},
- mud:{name:'Circuito de lama',sky:'#b6c8d1',far:'#798b7b',near:'#596b58',dirt:'#59422f',top:'#657d3e',bump:2}
-};
-let keys={}, state, particles=[], trackOffset=0, trees=[], lastStamp=0;
-function makeState(){
- const id=$('bikeChoice').value, map=$('mapChoice').value;
- return {bikeId:id,mapId:map, color:bikeDefs[id].color,
- x:175,y:GROUND-20,vx:0,vy:0,angle:0,angV:0,air:false,
- wheelie:0,crashed:false,finished:false,running:false,
- distance
+(function(){
+"use strict";
 
+const $ = id => document.getElementById(id);
+const canvas = $("canvas");
+const ctx = canvas.getContext("2d");
 
+let bike = "Honda", bikeColor = "#e62929";
+let track = "Floresta", mode = "race";
+let running = false, ended = false;
+let speed = 0, distance = 0, elapsed = 0, lap = 1;
+let jumpHeight = 0, jumpVelocity = 0, tilt = 0;
+let lastTime = 0, animation = 0, obstacles = [];
+let keys = {};
+let holdAccel = false, holdBrake = false, holdJump = false;
+let crashTime = 0;
+
+function choose(container, callback) {
+  $(container).querySelectorAll(".choice").forEach(el => {
+    el.addEventListener("click", () => {
+      $(container).querySelectorAll(".choice").forEach(c => c.classList.remove("selected"));
+      el.classList.add("selected");
+      callback(el);
+    });
+  });
+}
+
+choose("bikes", el => {
+  bike = el.dataset.bike;
+  bikeColor = el.dataset.color;
+});
+choose("tracks", el => track = el.dataset.track);
+
+function ground(x) {
+  const base = 340;
+  if (track === "Estádio") return base + Math.sin(x/150)*10 + Math.sin(x/65)*4;
+  if (track === "Montanha") return base + Math.sin(x/95)*28 + Math.sin(x/43)*9;
+  if (track === "Deserto") return base + Math.sin(x/120)*14 + Math.sin(x/49)*5;
+  return base + Math.sin(x/105)*21 + Math.sin(x/39)*7;
+}
+
+function resetGame() {
+  speed = 0;
+  distance = 0;
+  elapsed = 0;
+  lap = 1;
+  jumpHeight = 0;
+  jumpVelocity = 0;
+  tilt = 0;
+  crashTime = 0;
+  ended = false;
+  obstacles = [];
+  for (let i=0;i<16;i++) obstacles.push({
+    x: 450+i*330+Math.random()*120,
+    type: Math.random()<0.7 ? "bump" : "rock",
+    passed:false
+  });
+  $("hudBike").textContent = bike;
+  $("hudTrack").textContent = track;
+  $("status").textContent = "Boa corrida!";
+  $("lap").textContent = lap;
+  $("timer").textContent = "0.0";
+  $("speed").textContent = "0";
+}
+
+function startGame() {
+  try {
+    bike = $("bikes").querySelector(".selected").dataset.bike;
+    bikeColor = $("bikes").querySelector(".selected").dataset.color;
+    track = $("tracks").querySelector(".selected").dataset.track;
+    mode = $("mode").value;
+    resetGame();
+    $("menu").style.display = "none";
+    $("game").style.display = "block";
+    running = true;
+    lastTime = performance.now();
+    cancelAnimationFrame(animation);
+    animation = requestAnimationFrame(loop);
+  } catch (error) {
+    $("message").textContent = "Erro ao iniciar: " + error.message;
+    console.error(error);
+  }
+}
+
+function drawBike(x,y) {
+  ctx.save();
+  ctx.translate(x,y-jumpHeight);
+  ctx.rotate(tilt*0.22);
+  // Wheels
+  ctx.fillStyle="#171717";
+  ctx.beginPath();ctx.arc(-29,7,18,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.arc(31,7,18,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle="#b8c1ca";ctx.lineWidth=4;
+  ctx.beginPath();ctx.arc(-29,7,10,0,Math.PI*2);ctx.stroke();
+  ctx.beginPath();ctx.arc(31,7,10,0,Math.PI*2);ctx.stroke();
+  // Frame and body
+  ctx.strokeStyle="#c5ced7";ctx.lineWidth=5;
+  ctx.beginPath();ctx.moveTo(-29,7);ctx.lineTo(-8,-18);ctx.lineTo(31,7);ctx.stroke();
+  ctx.fillStyle=bikeColor;
+  ctx.beginPath();ctx.moveTo(-15,-24);ctx.lineTo(12,-29);ctx.lineTo(28,-12);ctx.lineTo(2,-7);ctx.closePath();ctx.fill();
+  ctx.fillStyle="#222";
+  ctx.fillRect(-17,-34,26,6);
+  // Rider
+  ctx.strokeStyle="#20232a";ctx.lineWidth=9;
+  ctx.beginPath();ctx.moveTo(-4,-29);ctx.lineTo(2,-49);ctx.lineTo(20,-34);ctx.stroke();
+  ctx.strokeStyle="#e6c29c";ctx.lineWidth=6;
+  ctx.beginPath();ctx.moveTo(2,-47);ctx.lineTo(20,-34);ctx.lineTo(30,-28);ctx.stroke();
+  ctx.fillStyle="#202b3c";
+  ctx.beginPath();ctx.arc(-3,-54,12,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle=bikeColor;
+  ctx.beginPath();ctx.moveTo(-14,-59);ctx.lineTo(7,-65);ctx.lineTo(13,-58);ctx.lineTo(-7,-54);ctx.fill();
+  ctx.restore();
+}
+
+function draw() {
+  const w=canvas.width,h=canvas.height;
+  const sky=ctx.createLinearGradient(0,0,0,h);
+  sky.addColorStop(0, track==="Estádio"?"#b7c8ef":"#78c9f4");
+  sky.addColorStop(1,"#e7f2fc");
+  ctx.fillStyle=sky;ctx.fillRect(0,0,w,h);
+
+  if(track==="Floresta"){
+    ctx.fillStyle="#367448";
+    for(let i=0;i<12;i++){
+      let x=((i*120-distance*0.25)%1200+1200)%1200-80;
+      ctx.beginPath();ctx.moveTo(x,ground(distance+x)-5);ctx.lineTo(x+35,150);ctx.lineTo(x+70,ground(distance+x)-5);ctx.fill();
+      ctx.fillStyle="#6d4b2c";ctx.fillRect(x+30,ground(distance+x)-35,10,35);ctx.fillStyle="#367448";
+    }
+  } else if(track==="Deserto"){
+    ctx.fillStyle="#e3c17a";ctx.fillRect(0,280,w,160);
+    ctx.fillStyle="#d0a353";
+    for(let i=0;i<5;i++){let x=((i*230-distance*0.12)%1200+1200)%1200-80;ctx.beginPath();ctx.ellipse(x,255,110,35,0,Math.PI,Math.PI*2);ctx.fill();}
+  } else if(track==="Montanha"){
+    ctx.fillStyle="#7e9aaf";
+    for(let i=0;i<8;i++){let x=((i*180-distance*0.1)%1300+1300)%1300-100;ctx.beginPath();ctx.moveTo(x,ground(distance+x));ctx.lineTo(x+100,90+Math.sin(i)*30);ctx.lineTo(x+220,ground(distance+x+220));ctx.fill();}
+  } else {
+    ctx.fillStyle="#7c8797";ctx.fillRect(0,80,w,190);
+    ctx.fillStyle="#394454";
+    for(let i=0;i<12;i++)ctx.fillRect(i*85,100,55,80);
+    ctx.fillStyle="#e8e8e8";
+    for(let i=0;i<12;i++)ctx.fillRect(i*85,185,55,8);
+  }
+
+  // Track surface
+  ctx.fillStyle=track==="Deserto"?"#bd8b4e":track==="Estádio"?"#a4a6a9":"#806044";
+  ctx.beginPath();ctx.moveTo(0,h);
+  for(let x=0;x<=w;x+=8)ctx.lineTo(x,ground(distance+x));
+  ctx.lineTo(w,h);ctx.closePath();ctx.fill();
+
+  ctx.strokeStyle="#d7c19b";ctx.lineWidth=4;ctx.beginPath();
+  for(let x=0;x<=w;x+=8){if(x===0)ctx.moveTo(x,ground(distance+x));else ctx.lineTo(x,ground(distance+x));}
+  ctx.stroke();
+
+  // Obstacles
+  obstacles.forEach(o=>{
+    const x=o.x-distance;
+    if(x>-70&&x<w+70){
+      const y=ground(o.x);
+      if(o.type==="bump"){
+        ctx.fillStyle="#63452f";
+        ctx.beginPath();ctx.ellipse(x,y-3,31,12,0,Math.PI,Math.PI*2);ctx.fill();
+      }else{
+        ctx.fillStyle="#5b5550";
+        ctx.beginPath();ctx.moveTo(x-16,y);ctx.lineTo(x-8,y-21);ctx.lineTo(x+8,y-25);ctx.lineTo(x+19,y);ctx.fill();
+      }
+    }
+  });
+
+  const bx=245, by=ground(distance+bx)-12;
+  drawBike(bx,by);
+  if(jumpHeight>12){
+    ctx.fillStyle="rgba(0,0,0,0.15)";
+    ctx.beginPath();ctx.ellipse(bx,ground(distance+bx)+3,37,6,0,0,Math.PI*2);ctx.fill();
+  }
+
+  ctx.fillStyle="#17202b";
+  ctx.font="bold 17px Arial";
+  ctx.fillText(track.toUpperCase(),20,30);
+  ctx.font="14px Arial";
+  ctx.fillText("DISTÂNCIA: "+Math.floor(distance/10)+" m",20,52);
+}
+
+function loop(now) {
+  if(!running)return;
+  const dt=Math.min((now-lastTime)/1000,0.04);
+  lastTime=now;
+
+  const accel=keys.ArrowRight||keys.KeyD||holdAccel;
+  const brake=keys.ArrowLeft||keys.KeyA||holdBrake;
+  const jumping=keys.Space||holdJump;
+
+  if(crashTime>0) {
+    crashTime-=dt;
+    speed=Math.max(0,speed-110*dt);
+    $("status").textContent="💥 Queda! Recupera e continua.";
+  } else {
+    if(accel)speed+=95*dt;
+    else speed-=13*dt;
+    if(brake)speed-=125*dt;
+    speed=Math.max(0,Math.min(155,speed));
+    if(jumping&&jumpHeight===0&&speed>18)jumpVelocity=260;
+    if(jumpVelocity!==0||jumpHeight>0){
+      jumpHeight+=jumpVelocity*dt;
+      jumpVelocity-=620*dt;
+      if(jumpHeight<=0){jumpHeight=0;jumpVelocity=0;}
+    }
+    if(keys.ArrowUp)tilt=-1;
+    else if(keys.ArrowDown)tilt=1;
+    else tilt*=0.9;
+
+    distance+=speed*dt*0.8;
+    elapsed+=dt;
+
+    obstacles.forEach(o=>{
+      if(!o.passed&&o.x-distance>205&&o.x-distance<290){
+        o.passed=true;
+        if(jumpHeight<15){
+          if(o.type==="rock"){crashTime=1.1;speed*=0.35;}
+          else speed=Math.max(0,speed-13);
+        } else {
+          $("status").textContent="🔥 Bom salto!";
+        }
+      }
+    });
+
+    if(mode==="race"){
+      const newLap=Math.floor(distance/1800)+1;
+      if(newLap!==lap){lap=Math.min(3,newLap);$("lap").textContent=lap;}
+      if(distance>=5400){running=false;ended=true;$("status").textContent="🏆 Corrida terminada! Tempo: "+elapsed.toFixed(1)+" s";$("status").style.color="#69f0ae";}
+    } else if(mode==="time"&&elapsed>=60){
+      running=false;ended=true;
+      $("status").textContent="⏱️ Tempo terminado! Distância: "+Math.floor(distance/10)+" m";
+    }
+
+    if(obstacles.length&&obstacles[obstacles.length-1].x-distance<1200){
+      obstacles.push({x:distance+1800+Math.random()*700,type:Math.random()<0.7?"bump":"rock",passed:false});
+    }
+    $("status").style.color="#ffb36b";
+  }
+
+  $("speed").textContent=Math.round(speed);
+  $("timer").textContent=elapsed.toFixed(1);
+  draw();
+  if(running)animation=requestAnimationFrame(loop);
+}
+
+window.addEventListener("keydown",e=>{
+  if(["ArrowRight","ArrowLeft","ArrowUp","ArrowDown","Space"].includes(e.code))e.preventDefault();
+  keys[e.code]=true;
+});
+window.addEventListener("keyup",e=>keys[e.code]=false);
+
+function holdButton(id,setter){
+  const el=$(id);
+  el.addEventListener("pointerdown",e=>{e.preventDefault();setter(true);});
+  ["pointerup","pointercancel","pointerleave"].forEach(ev=>el.addEventListener(ev,()=>setter(false)));
+}
+holdButton("accelerate",v=>holdAccel=v);
+holdButton("brake",v=>holdBrake=v);
+holdButton("jump",v=>holdJump=v);
+
+$("start").addEventListener("click",startGame);
+$("backMenu").addEventListener("click",()=>{
+  running=false;
+  cancelAnimationFrame(animation);
+  $("game").style.display="none";
+  $("menu").style.display="block";
+  $("message").textContent="Escolhe as opções e começa outra corrida!";
+});
+
+draw();
+})();
+</script>
+</body>
+</html>
 
 
