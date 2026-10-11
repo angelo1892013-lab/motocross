@@ -1,0 +1,270 @@
+
+
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Motocross Extreme</title>
+
+<style>
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: #15191e;
+  color: white;
+  font-family: Arial, sans-serif;
+  text-align: center;
+}
+h1 { color: #ff5b20; margin: 12px; }
+canvas {
+  width: 95%;
+  max-width: 1000px;
+  background: #81d9ff;
+  border: 3px solid white;
+  border-radius: 10px;
+}
+p { margin: 8px; }
+button {
+  padding: 12px 24px;
+  background: #ff5b20;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 17px;
+  cursor: pointer;
+  margin: 5px;
+}
+</style>
+</head>
+
+<body>
+<h1>🏁 MOTOCROSS EXTREME 🏁</h1>
+<p>Usa ESPAÇO, ↑ ou o botão SALTAR para evitar os obstáculos!</p>
+
+<canvas id="jogo" width="960" height="450"></canvas>
+<br>
+<button onclick="saltar()">🏍️ SALTAR</button>
+<button onclick="reiniciar()">🔄 RECOMEÇAR</button>
+<p id="info">Distância: 0 m</p>
+
+<script>
+const canvas = document.getElementById("jogo");
+const ctx = canvas.getContext("2d");
+
+let mota, obstaculos, distancia, velocidade, terminado;
+const chao = 355;
+
+function reiniciar() {
+  mota = { x: 130, y: chao - 30, vy: 0, noAr: false };
+  obstaculos = [];
+  for (let i = 0; i < 5; i++) {
+    obstaculos.push({
+      x: 600 + i * 260,
+      w: 35,
+      h: 30
+    });
+  }
+  distancia = 0;
+  velocidade = 5;
+  terminado = false;
+}
+
+function saltar() {
+  if (terminado) {
+    reiniciar();
+    return;
+  }
+  if (!mota.noAr) {
+    mota.vy = -13;
+    mota.noAr = true;
+  }
+}
+
+document.addEventListener("keydown", e => {
+  if (e.code === "Space" || e.code === "ArrowUp") {
+    e.preventDefault();
+    saltar();
+  }
+});
+
+function desenharMota() {
+  const x = mota.x, y = mota.y;
+
+  // Rodas
+  ctx.strokeStyle = "#171717";
+  ctx.lineWidth = 6;
+  ctx.beginPath();
+  ctx.arc(x, y, 18, 0, Math.PI * 2);
+  ctx.arc(x + 58, y, 18, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // Raios
+  ctx.lineWidth = 2;
+  for (const cx of [x, x + 58]) {
+    ctx.beginPath();
+    ctx.moveTo(cx - 12, y);
+    ctx.lineTo(cx + 12, y);
+    ctx.moveTo(cx, y - 12);
+    ctx.lineTo(cx, y + 12);
+    ctx.stroke();
+  }
+
+  // Quadro da mota
+  ctx.lineWidth = 6;
+  ctx.strokeStyle = "#f03b20";
+  ctx.beginPath();
+  ctx.moveTo(x, y);
+  ctx.lineTo(x + 23, y - 24);
+  ctx.lineTo(x + 58, y);
+  ctx.lineTo(x, y);
+  ctx.moveTo(x + 23, y - 24);
+  ctx.lineTo(x + 35, y);
+  ctx.stroke();
+
+  // Banco e guiador
+  ctx.strokeStyle = "#202020";
+  ctx.lineWidth = 6;
+  ctx.beginPath();
+  ctx.moveTo(x + 17, y - 30);
+  ctx.lineTo(x + 35, y - 30);
+  ctx.moveTo(x + 48, y - 28);
+  ctx.lineTo(x + 62, y - 37);
+  ctx.stroke();
+
+  // Piloto e capacete
+  ctx.strokeStyle = "#1745a0";
+  ctx.lineWidth = 10;
+  ctx.beginPath();
+  ctx.moveTo(x + 30, y - 36);
+  ctx.lineTo(x + 37, y - 19);
+  ctx.stroke();
+
+  ctx.fillStyle = "#ffca8b";
+  ctx.beginPath();
+  ctx.arc(x + 29, y - 48, 10, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = "#ffcf00";
+  ctx.beginPath();
+  ctx.arc(x + 29, y - 51, 11, Math.PI, Math.PI * 2);
+  ctx.fill();
+  ctx.fillRect(x + 28, y - 53, 16, 4);
+}
+
+function desenharCenario() {
+  // Céu
+  ctx.fillStyle = "#80d9ff";
+  ctx.fillRect(0, 0, 960, 450);
+
+  // Sol
+  ctx.fillStyle = "#ffe35c";
+  ctx.beginPath();
+  ctx.arc(820, 75, 38, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Montanhas
+  ctx.fillStyle = "#6ca66b";
+  ctx.beginPath();
+  ctx.moveTo(0, 300);
+  ctx.lineTo(150, 110);
+  ctx.lineTo(320, 300);
+  ctx.lineTo(500, 140);
+  ctx.lineTo(700, 300);
+  ctx.lineTo(850, 170);
+  ctx.lineTo(960, 270);
+  ctx.lineTo(960, 450);
+  ctx.lineTo(0, 450);
+  ctx.fill();
+
+  // Terra
+  ctx.fillStyle = "#94602f";
+  ctx.fillRect(0, chao, 960, 95);
+  ctx.fillStyle = "#45b649";
+  ctx.fillRect(0, chao, 960, 10);
+
+  // Pedras decorativas
+  ctx.fillStyle = "#674322";
+  for (let i = 0; i < 18; i++) {
+    let x = ((i * 83 - distancia * 2) % 1000 + 1000) % 1000;
+    ctx.fillRect(x, 385 + (i % 3) * 12, 12, 4);
+  }
+}
+
+function atualizar() {
+  if (terminado) return;
+
+  mota.vy += 0.65;
+  mota.y += mota.vy;
+
+  if (mota.y >= chao - 30) {
+    mota.y = chao - 30;
+    mota.vy = 0;
+    mota.noAr = false;
+  }
+
+  distancia += velocidade / 10;
+  velocidade = Math.min(9, 5 + distancia / 300);
+
+  for (const o of obstaculos) {
+    o.x -= velocidade;
+
+    if (o.x + o.w < 0) {
+      o.x = 1000 + Math.random() * 400;
+      o.h = 22 + Math.random() * 18;
+    }
+
+    // Obstáculo
+    ctx.fillStyle = "#f6c331";
+    ctx.beginPath();
+    ctx.moveTo(o.x, chao);
+    ctx.lineTo(o.x + o.w / 2, chao - o.h);
+    ctx.lineTo(o.x + o.w, chao);
+    ctx.fill();
+
+    // Colisão
+    const motaDir = mota.x + 55;
+    const motaBaixo = mota.y + 12;
+    if (
+      motaDir > o.x + 4 &&
+      mota.x + 8 < o.x + o.w - 4 &&
+      motaBaixo > chao - o.h + 5
+    ) {
+      terminado = true;
+    }
+  }
+
+  document.getElementById("info").textContent =
+    "Distância: " + Math.floor(distancia) + " m | Velocidade: " +
+    Math.floor(velocidade * 10) + " km/h";
+}
+
+function desenhar() {
+  desenharCenario();
+  desenharMota();
+
+  if (terminado) {
+    ctx.fillStyle = "rgba(0,0,0,0.7)";
+    ctx.fillRect(0, 0, 960, 450);
+    ctx.fillStyle = "#ff5b20";
+    ctx.font = "bold 48px Arial";
+    ctx.textAlign = "center";
+    ctx.fillText("CAÍSTE!", 480, 190);
+    ctx.fillStyle = "white";
+    ctx.font = "24px Arial";
+    ctx.fillText("Distância: " + Math.floor(distancia) + " m", 480, 235);
+    ctx.fillText("Carrega em RECOMEÇAR para jogar novamente", 480, 280);
+  }
+}
+
+function ciclo() {
+  atualizar();
+  desenhar();
+  requestAnimationFrame(ciclo);
+}
+
+reiniciar();
+ciclo();
+</script>
+</body>
+</html>
